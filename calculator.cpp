@@ -1,66 +1,160 @@
+#include <tchar.h>
 #include <windows.h>
+#include <stdio.h>
+#include <cstring>
 
-/* This is where all the input to the window goes to */
-LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) {
-	switch(Message) {
-		
-		/* Upon destruction, tell the main thread to stop */
-		case WM_DESTROY: {
-			PostQuitMessage(0);
-			break;
-		}
-		
-		/* All other messages (a lot of them) are processed using default procedures */
-		default:
-			return DefWindowProc(hwnd, Message, wParam, lParam);
-	}
-	return 0;
-}
+LRESULT CALLBACK WindowProcedure (HWND, UINT, WPARAM, LPARAM);
 
-/* The 'main' function of Win32 GUI programs: this is where execution starts */
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-	WNDCLASSEX wc; /* A properties struct of our window */
-	HWND hwnd; /* A 'HANDLE', hence the H, or a pointer to our window */
-	MSG msg; /* A temporary location for all messages */
+TCHAR szClassName[ ] = _T("CodeBlocksWindowsApp");
+HWND textfield,button,textbox1,textbox2;
 
-	/* zero out the struct and set the stuff we want to modify */
-	memset(&wc,0,sizeof(wc));
-	wc.cbSize	 = sizeof(WNDCLASSEX);
-	wc.lpfnWndProc	 = WndProc; /* This is where we will send messages to */
-	wc.hInstance	 = hInstance;
-	wc.hCursor	 = LoadCursor(NULL, IDC_ARROW);
-	
-	/* White, COLOR_WINDOW is just a #define for a system color, try Ctrl+Clicking it */
-	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-	wc.lpszClassName = "WindowClass";
-	wc.hIcon	 = LoadIcon(NULL, IDI_APPLICATION); /* Load a standard icon */
-	wc.hIconSm	 = LoadIcon(NULL, IDI_APPLICATION); /* use the name "A" to use the project icon */
+char texts1[20],texts2[20];
+int WINAPI WinMain (HINSTANCE hThisInstance,
+                     HINSTANCE hPrevInstance,
+                     LPSTR lpszArgument,
+                     int nCmdShow)
+{
+    HWND hwnd;
+    MSG messages;
+    WNDCLASSEX wincl;
 
-	if(!RegisterClassEx(&wc)) {
-		MessageBox(NULL, "Window Registration Failed!","Error!",MB_ICONEXCLAMATION|MB_OK);
-		return 0;
-	}
+    wincl.hInstance = hThisInstance;
+    wincl.lpszClassName = szClassName;
+    wincl.lpfnWndProc = WindowProcedure;
+    wincl.style = CS_DBLCLKS;
+    wincl.cbSize = sizeof (WNDCLASSEX);
 
-	hwnd = CreateWindowEx(WS_EX_CLIENTEDGE,"WindowClass","Caption",WS_VISIBLE|WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, /* x */
-		CW_USEDEFAULT, /* y */
-		640, /* width */
-		480, /* height */
-		NULL,NULL,hInstance,NULL);
 
-	if(hwnd == NULL) {
+    wincl.hIcon = LoadIcon (NULL, IDI_APPLICATION);
+    wincl.hIconSm = LoadIcon (NULL, IDI_APPLICATION);
+    wincl.hCursor = LoadCursor (NULL, IDC_ARROW);
+    wincl.lpszMenuName = NULL;
+    wincl.cbClsExtra = 0;
+    wincl.cbWndExtra = 0;
+    wincl.hbrBackground = (HBRUSH) CreateSolidBrush(RGB(0, 255, 0));
+
+    if (!RegisterClassEx (&wincl))
+        return 0;
+
+    hwnd = CreateWindowEx (
+           0,
+           szClassName,
+           _T("My Calculator"),
+           WS_SYSMENU,
+           CW_USEDEFAULT,
+           CW_USEDEFAULT,
+           250,
+           200,
+           HWND_DESKTOP,
+           NULL,
+           hThisInstance,
+           NULL
+           );
+
+    ShowWindow (hwnd, nCmdShow);
+
+    if(hwnd == NULL) {
 		MessageBox(NULL, "Window Creation Failed!","Error!",MB_ICONEXCLAMATION|MB_OK);
 		return 0;
 	}
 
-	/*
-		This is the heart of our program where all input is processed and 
-		sent to WndProc. Note that GetMessage blocks code flow until it receives something, so
-		this loop will not produce unreasonably high CPU usage
-	*/
-	while(GetMessage(&msg, NULL, 0, 0) > 0) { /* If no error is received... */
-		TranslateMessage(&msg); /* Translate key codes to chars if present */
-		DispatchMessage(&msg); /* Send it to WndProc */
-	}
-	return msg.wParam;
+    while (GetMessage (&messages, NULL, 0, 0))
+    {
+        TranslateMessage(&messages);
+        DispatchMessage(&messages);
+    }
+
+    return messages.wParam;
+}
+
+LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch (message)
+    {
+        case WM_CREATE:
+            textfield = CreateWindow("STATIC",
+                                     "Please input two numbers",
+                                     WS_VISIBLE | WS_CHILD,
+                                     30, 15, 175, 25,
+                                     hwnd, NULL, NULL, NULL);
+
+            button = CreateWindow("BUTTON",
+                                  "+", WS_VISIBLE | WS_CHILD | WS_BORDER,
+                                  40, 125, 30, 30,
+                                  hwnd, (HMENU)1, NULL, NULL);
+            button = CreateWindow("BUTTON",
+                                  "-", WS_VISIBLE | WS_CHILD | WS_BORDER,
+                                  80, 125, 30, 30,
+                                  hwnd, (HMENU)2, NULL, NULL);
+            button = CreateWindow("BUTTON",
+                                  "*", WS_VISIBLE | WS_CHILD | WS_BORDER,
+                                  120, 125, 30, 30,
+                                  hwnd, (HMENU)3, NULL, NULL);
+            button = CreateWindow("BUTTON",
+                                  "/", WS_VISIBLE | WS_CHILD | WS_BORDER,
+                                  160, 125, 30, 30,
+                                  hwnd, (HMENU)4, NULL, NULL);
+
+            textbox1 = CreateWindow("EDIT",
+                                   "", WS_BORDER | WS_CHILD | WS_VISIBLE,
+                                   30, 50, 175, 25,
+                                   hwnd, NULL, NULL, NULL);
+            textbox2 = CreateWindow("EDIT",
+                                   "", WS_BORDER | WS_CHILD | WS_VISIBLE,
+                                   30, 80, 175, 25,
+                                   hwnd, NULL, NULL, NULL);
+            break;
+
+        case WM_COMMAND:
+            switch(LOWORD(wParam)){
+                case 1:
+                    {int gwtstat1 = 0, gwtstat2 = 0;
+                    gwtstat1 = GetWindowText(textbox1,&texts1[0],20);
+                    gwtstat2 = GetWindowText(textbox2,&texts2[0],20);
+
+                    double ans = atof(texts1)+atof(texts2);
+                    char answer[50];
+                    sprintf(answer,"%.3lf",ans);
+                    ::MessageBox(hwnd,answer,"Result",MB_OK);
+                    break;}
+                case 2:
+                    {int gwtstat1 = 0, gwtstat2 = 0;
+                    gwtstat1 = GetWindowText(textbox1,&texts1[0],20);
+                    gwtstat2 = GetWindowText(textbox2,&texts2[0],20);
+
+                    double ans = atof(texts1)-atof(texts2);
+                    char answer[50];
+                    sprintf(answer,"%.3lf",ans);
+                    ::MessageBox(hwnd,answer,"Result",MB_OK);
+                    break;}
+                case 3:
+                    {int gwtstat1 = 0, gwtstat2 = 0;
+                    gwtstat1 = GetWindowText(textbox1,&texts1[0],20);
+                    gwtstat2 = GetWindowText(textbox2,&texts2[0],20);
+
+                    double ans = atof(texts1)*atof(texts2);
+                    char answer[50];
+                    sprintf(answer,"%.3lf",ans);
+                    ::MessageBox(hwnd,answer,"Result",MB_OK);
+                    break;}
+                case 4:
+                    {int gwtstat1 = 0, gwtstat2 = 0;
+                    gwtstat1 = GetWindowText(textbox1,&texts1[0],20);
+                    gwtstat2 = GetWindowText(textbox2,&texts2[0],20);
+
+                    double ans = atof(texts1)/atof(texts2);
+                    char answer[50];
+                    sprintf(answer,"%.3lf",ans);
+                    ::MessageBox(hwnd,answer,"Result",MB_OK);
+                    break;}
+            }
+            break;
+        case WM_DESTROY:
+            PostQuitMessage (0);
+            break;
+        default:
+            return DefWindowProc (hwnd, message, wParam, lParam);
+    }
+
+    return 0;
 }
